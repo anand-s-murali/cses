@@ -59,84 +59,11 @@ is our DFS method described above.
 
 ## [Labyrinth](https://cses.fi/problemset/task/1193)
 Again, we are given an *nxm* map consisting of walls and floor tiles, however, this time, we need to find the shortest path, if one exists, from the starting point A, to the end point B and print out such a path.
-Since we are interested in the *shortest* path, you should immediately be thinking Breadth-First Search. That's exactly what we will do. Simply perform BFS from A and attempt to reach B.
-If we can reach B, we have, by definition, found the shoretst path. If we cannot, no such path exists. Now we need to recover our path. To do this, we will maintain another *nxm* grid
-which will hold a *pair* of values. Our pair will consists of a (another) pair of integers to hold the previous board position, and a character to tell us which direction we traveled to get the the current position.
-In C++ we can model this grid as such `pair<pair<int,int>, char> prev[n][m].` Now, once we find our path, we simply need to look at our table for the direction we took and the board position we came from, until we get back to A.
+Since we are interested in the *shortest* path, you should immediately be thinking Breadth-First Search.
 
 ### Code
-```C++
-int main() {
-	// makes input/output faster
-	ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
+I have omitted the code for this problem because this is a rather straightforward BFS search. The tricky part of this problem is recovering the path. If you are having trouble with this, I would reccommend reading over [benq's solution](https://github.com/thcy/CSES-Solutions/blob/master/Graph%20Algorithms/Labyrinth%20(1193)/Benq.cpp), who creates another *nxm* table consisting of pairs of values. The first value being another pair consisting of integers to store the "parent's" board position, and the second value being a character describing the direction the parent took to reach the current board position. Also, depending on your implemenation, you may need to reverse your final path.
 
-	// initialize data structures
-	pair<int,int> source, goal;
-	char grid[1000][1000];
-	int dist[1000][1000];	
-	pair<pii, char> prev[1000][1000];
-	int dx[4] = {-1,0,1,0};
-	int dy[4] = {0, 1, 0, -1};
-	string ds = "URDL";
-	queue<pii> frontier;
-
-	// read in grid	
-	int N, M;
-	cin >> N >> M;
-	for(int i = 0; i < N; i++) {
-		for(int j = 0; j < M; j++) {
-			dist[i][j] = -1;
-			cin >> grid[i][j];
-			if(grid[i][j] == 'A') source = {i,j};
-			if(grid[i][j] == 'B') goal = {i,j};
-		}
-	}
-
-	dist[source.first][source.second] = 0; // distance of source is trivially 0
-
-	// begin BFS from source
-	frontier.push(source);
-	while(!frontier.empty()) {
-		pii curr = frontier.front();
-		int x = curr.first, y = curr.second;
-		frontier.pop();
-
-		if(curr == goal) break; // check if we have found the goal
-
-		// add neighbors
-		for(int i = 0; i < 4; i++) {
-			int nx = x + dx[i];
-			int ny = y + dy[i];
-			// ignore invalid positions
-			if(nx < 0 || nx >= N || ny < 0 || ny >= M) continue;
-			if(grid[nx][ny] == '#' || dist[nx][ny] != -1) continue;
-		
-			// update tables and add next position to queue	
-			prev[nx][ny] = {curr, ds[i]};
-			dist[nx][ny] = dist[x][y] + 1;
-			frontier.push({nx,ny});
-		}		
-	}
-
-	if(dist[goal.first][goal.second] != -1) {
-		// recover path
-		string path = "";
-		int d = dist[goal.first][goal.second];
-		while(goal != source) {
-			path += prev[goal.first][goal.second].second;
-			goal = prev[goal.first][goal.second].first;
-		}
-		reverse(all(path));
-		cout << "YES" << endl;
-		cout << d << endl;
-		cout << path << endl;
-	}
-	else cout << "NO" << endl;
-
-	return 0;
-}
-```
 ## [Building Roads](https://cses.fi/problemset/task/1666)
 Given *n* cities and *m* roads connecting these cities, we need to find the smallest number of roads such that there is a road between any two cities. Note that roads are bi-directitonal
 and that any solution is valid.
