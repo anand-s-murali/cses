@@ -75,7 +75,7 @@ there are three connected components {{1,2}, {3,4}, {5,6}} and we need two edges
 
 Our solution will count the number of roads and create the roads simultaneously. Let `k = 0` denote the number of roads we will need. Following the example above, we will count the number of connected components
 in our graph by performing (B/D)FS from each unvisited city, incrementing `k` each time we call our (B/D)FS. By the end of our algorithm, the number of roads we will need is `k-1`. 
-To find the necessary roads, we need to keep track of just one city from one of the components. We denote this city as the `head`. Whenever we perform (B/D)FS from a new city *i*,
+To find the necessary roads, we need to keep track of just one city from one of the components. We denote this city as the `head` city. Whenever we perform (B/D)FS from a new city *i*,
 we will create the road (head, i), save it to a string, and then set `head = i`.
 
 ### Code
