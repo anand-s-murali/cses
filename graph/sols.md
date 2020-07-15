@@ -1,5 +1,5 @@
 # Solutions
-Below are all the solutions, with explanation, to the graph questions from CSES.
+Below are all the solutions (some code omitted), with explanation, to the graph questions that I have completeted from CSES.
 
 ## [Counting Rooms](https://cses.fi/problemset/task/1192)
 
