@@ -264,3 +264,142 @@ int main() {
 	return 0;
 }	
 ```
+
+## [Cycle Finding](https://cses.fi/problemset/task/1197)
+Given a directed graph, your task is to find out if it contains a negative cycle, and also give an example of such a cycle.
+
+This problem is a direct application of the [Bellman Ford Algorithm](https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm).
+
+## Code
+See [this](https://cp-algorithms.com/graph/finding-negative-cycle-in-graph.html) for the code.
+
+## [Round Trip II](https://cses.fi/problemset/task/1678)
+As was the case with Round Trips, our task is to design a round trip that begins in a city, goes through one or more other cities, and finally returns to the starting city. Every intermediate city on the route has to be distinct. The difference between this question and its predecessor is that now our graph is *directed*.
+
+### Finding Cycles in a Directed Graph
+Though finding cycles in a directed graph is no harder than that of unidrected graphs, it is slightly more subtle, and deserves some explanation.
+Consider a graph *G* consisting of *n* nodes and *m* edges. To look for a cycle, we will use three colors to indicate the state of a node. Color 0 (white) means the node has been univisted (this is the initial state of all the nodes), color 1 (grey) means the node has been discovered, and color 2 (black) means the node has been completely explored. We start by performing the ususal DFS from any unvisited node *u*. We label the color of *u*, which was 0 to start, to 1, and we look at *u's* neighbors. We recursively call our DFS methtod for all neighbors *v* of *u* such that `color[v] == 0` (that is, we recur over all unvisited neighbors). If we have some neighbor *v* of *u* such that `color[v] == 1`, then we have a cycle. This is commonly known as a *back edge* in a directed graph. You can learn more about this algorithm [here](https://www.youtube.com/watch?v=AK7BuT5MgU0).
+
+Now our job is simple. Look for a directed cycle using the steps above. If we have a cycle, recover it as we've done before.
+
+## Code
+```C++
+int cycleStart = -1;
+int cycleEnd = -1;
+bool dfs(vector<int> graph[], int color[], int prev[], int u) {
+	color[u] = 1;
+	for(auto& v: graph[u]) {
+		if(color[v] == 0) {
+			prev[v] = u;
+			if(dfs(graph, color, prev, v)) return true;
+		}
+		else if(color[v] == 1) {
+			cycleStart = v;
+			cycleEnd = u;
+			return true;
+		}
+	}
+	color[u] = 2;
+	return false;
+}
+
+int main() {
+	// makes input/output faster
+	ios_base::sync_with_stdio(false); cin.tie(NULL);
+
+	const int mxN = 10e5+1;
+	static vector<int> graph[mxN];
+	static int color[mxN] = {0};
+	static int prev[mxN] = {0};
+
+	int V, E, a, b;
+	cin >> V >> E;
+	for(int i = 0; i < E; i++) {
+		cin >> a >> b;
+		graph[a].push_back(b);
+	}
+
+	// perform dfs
+	for(int i = 1; i <= V; i++) {
+		if(color[i] == 0) {
+			prev[i] = -1;
+			if(dfs(graph, color, prev, i)) break;
+		}
+	}	
+
+	if(cycleStart == -1) cout << "IMPOSSIBLE" << endl;
+	else {
+		////cout << "cycle starting at " << cycleStart << " and ending at " << cycleEnd << endl;
+		vector<int> path;
+		path.push_back(cycleEnd);
+		while(cycleEnd != cycleStart) {
+			path.push_back(prev[cycleEnd]);
+			cycleEnd = prev[cycleEnd];
+		}
+		reverse(all(path));
+		path.push_back(cycleStart);
+		cout << path.size() << endl;
+		for(auto& e: path) cout << e << " ";
+	}
+	return 0;
+}	
+```
+
+## [Course Schedule](https://cses.fi/problemset/task/1679)
+Our task is as follows: you have to complete *n* courses. There are *m* requirements of the form "course a has to be completed before course b". Your task is to find an order in which you can complete the courses.
+
+### Topological Sort
+Our tasks reduces to finding a [topological ordering](https://en.wikipedia.org/wiki/Topological_sorting) of the courses. It can be proven that every Directed-Acyclic Graph (DAG) has a topological ordering of its vertices. Our algorithm must do two things: make sure that our graph does not contain a cycle, and find an ordering of the nodes. In the previous problem, we learned how to check for directed cycles. As it turns out, we can actually find a topological ordering of the nodes by adding all nodes to a list as soon as they get colored black. This produces a *reverse topological ordering*.
+## Code
+Note that our code for this problem is almost identical to the previous question!
+```C++
+bool cycle = false;
+void dfs(vector<int> graph[], int color[], vector<int>& top, int u) {
+	color[u] = 1;
+	for(auto& v: graph[u]) {
+		if(color[v] == 0) {
+			dfs(graph, color, top, v);
+		}
+		else if(color[v] == 1) {
+			cycle = true;
+			return;
+		}
+	}
+	top.push_back(u);
+	color[u] = 2;
+}
+
+
+int main() {
+	// makes input/output faster
+	ios_base::sync_with_stdio(false); cin.tie(NULL);
+
+	const int mxN = 10e5+1;
+	static vector<int> graph[mxN];
+	static int color[mxN] = {0};
+	vector<int> top;
+
+	int V, E, a, b;
+	cin >> V >> E;
+	for(int i = 0; i < E; i++) {
+		cin >> a >> b;
+		graph[a].push_back(b);
+	}
+
+	// perform dfs
+	for(int i = 1; i <= V; i++) {
+		if(color[i] == 0) {
+			dfs(graph, color, top, i);
+		}
+		if(cycle) break;
+	}
+
+	if(cycle) cout << "IMPOSSIBLE" << endl;
+	else {
+		reverse(all(top));
+		for(auto& e: top) cout << e << " ";
+	}
+	
+	return 0;
+}
+```
