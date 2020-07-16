@@ -128,3 +128,139 @@ int main() {
 }
 ```
 Following up on our example, this code would create the roads (1,3) and (3,5). Again, please note that this solution is not unique.
+
+## [Message Routes](https://cses.fi/problemset/task/1667)
+Give *n* computers labeled 1 through *n*, we need to determine if there is a path from computer 1 to computer *n*. If such a path exists, we need to print out the 
+shortest path.
+
+This is again nothing more than a simple Breadth-First Search. And, at the risk of contradicting myself, the code is provided below. In my solution, I keep track 
+of three auxiliary arrays. *seen* is used to keep track of vertices that have already been visited (duh), *dist* is used to keep track of all the distances to each
+of the vertices (duh), and *prev* which is used to store parent vertex for each vertex. Initially, all distances are set to 0, and the parent of the source node (in our case node 1) is -1 as it has no parent. If we find a valid path, we simply iterate over the *prev* array staring from node *n*.
+
+## Code
+```C++
+int main() {
+	// makes input/output faster
+	ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+
+	const int v = 100001;
+	vector<int> graph[v];
+	int seen[v] = {0};
+	int dist[v] = {0};
+	int prev[v] = {0};
+	queue<int> frontier;
+
+	int V, E;
+	cin >> V >> E;	
+	for(int i = 0; i < E; i++) {
+		int a, b;
+		cin >> a >> b;
+		graph[a].push_back(b);
+		graph[b].push_back(a);
+	}
+	
+	frontier.push(1);
+	prev[1] = -1;
+	while(!frontier.empty()) {
+		int u = frontier.front();
+		frontier.pop();
+		seen[u] = 1;
+		if(u == V) break;
+		for(auto& v: graph[u]) {
+			if(!seen[v]) {
+				prev[v] = u; // update prev
+				dist[v] = dist[u] + 1; // update dist
+				seen[v] = 1; // update seen
+				frontier.push(v);
+			}
+		}
+	}
+
+	if(!seen[V]) cout << "IMPOSSIBLE" << endl;
+	else {
+		int d = dist[V];
+		vector<int> path;
+		path.push_back(V);
+		while(V != 1) {
+			path.push_back(prev[V]);
+			V = prev[V];
+		}
+		reverse(all(path));
+		cout << d+1 << endl;
+		for(auto& e: path) cout << e << " ";
+	}
+
+
+	return 0;
+}
+```
+
+
+## [Round Trip](https://cses.fi/problemset/task/1669)
+Given *n* cities and *m* roads between them, our task is to design a round trip that begins in a city, goes through two or more other cities, and finally returns to the starting city. Every intermediate city on the route has to be distinct. Any valid solution is acceptable.
+
+This problem reduces to finding a cycle in an undirected graph. We can do this simply by performing a depth-first search. Staring from some node *u*, recursively call our DFS method on the univisited neighbors. If we reach some neighbor *v* that has already been visited and *v* is *not* the parent of *u*, we have a cycle. Recovering the cycle is easy, by keeping two variables, `cycleStart` and `cycleEnd`, we simply iterate backwards from `cycleEnd` (we can do this by keeping track of the parent nodes) until we reach `cycleStart`.
+
+## Code
+```C++
+int cycleStart = -1;
+int cycleEnd = -1;
+
+bool hasCycle(vector<int> graph[], int visited[], int prev[], int source, int parent) {
+	visited[source] = true;
+	for(auto& v: graph[source]) {
+		if(!visited[v]) {
+			prev[v] = source;
+			if(hasCycle(graph, visited, prev, v, source)) return true;
+		}
+		else if(v != parent) {
+			cycleStart = v;
+			cycleEnd = source;
+			return true;
+		}
+	}
+	return false;
+}
+
+int main() {
+	// makes input/output faster
+	ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+	
+	const int v = 100001;
+	vector<int> graph[v];
+	int visited[v] = {0};
+	int prev[v] = {0};
+
+	int V, E;
+	cin >> V >> E;
+	for(int i = 0; i < E; i++) {
+		int a, b;
+		cin >> a >> b;
+		graph[a].push_back(b);
+		graph[b].push_back(a);
+	}
+
+	for(int i = 1; i <= V; i++) {
+		if(!visited[i]) {
+			if(hasCycle(graph, visited, prev, i, -1)) break;
+		}
+	}
+	
+	if(cycleStart == -1) cout << "IMPOSSIBLE" << endl;
+	else {
+		vector<int> path;
+		path.push_back(cycleEnd);
+		while(cycleEnd != cycleStart) {
+			path.push_back(prev[cycleEnd]);
+			cycleEnd = prev[cycleEnd];
+		}
+		reverse(all(path));
+		path.push_back(cycleStart);
+		cout << path.size() << endl;
+		for(auto& e: path) cout << e << " ";
+	}
+	return 0;
+}	
+```
