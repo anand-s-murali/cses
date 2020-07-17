@@ -265,6 +265,122 @@ int main() {
 }	
 ```
 
+## [Shortest Routes I](https://cses.fi/problemset/task/1671)
+Given a graph consisting of *n* nodes, labeled from 1 to *n*, and *m* edges, our goal is to find the shortest path from node 1 to all other nodes.
+
+This problem can be solved by using [Dijkstra's Algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm). We present the algorithm here.
+
+### Dijkstra's Algorithm
+Dijkstra's Algorithm can be used on both undirected and directed graph. If all the edge weights are one, this algorithm reduces to a traditional Breadth-First Search. An important note about this algorithm is that it does **NOT** work on graphs whose edges weights are negative! Though the algorithm will terminate if negative edge weights are present, it is not guaranteed that the results will be accurate.
+
+## Code
+Note that in our implementation, after we relax an edge, we push the pair {a,b} onto the priority queue, where a is the distance to node b, and b is the node.
+Moreover, we push the distance *-a* onto the queue because C++ uses a max-heap.
+
+```C++
+vector<ll> dijkstra(vector<pair<int, int> > adj[], int source, int V) {
+	vector<ll> distances(V+1, 0); // vector to hold final distances
+	vector<bool> processed(V+1, false); // vector to keep track of seen nodes
+	// initialize all distances to INF
+	for(int i = 1; i <= V; i++) {
+		distances[i] = LONG_MAX;
+	}
+	distances[source] = 0; // distance of source is 0
+
+	// maintain priority queue to perform dijkstra
+	priority_queue<pair<ll ,ll> > pq;
+	pq.push({0,source}); // push source node with distance 0
+	while(!pq.empty()) {
+		int u = pq.top().second; // get node at top of pq
+		pq.pop();
+		if(processed[u]) continue;
+		processed[u] = true;
+		for(auto& pair: adj[u]) {
+			int v = pair.first; // get node incident to u
+			int w = pair.second; // get cost of traveling to node v
+			if(distances[u] + w < distances[v]) {
+				distances[v] = distances[u] + w; // update distance to v
+				pq.push({-distances[v], v}); // push v with new distance onto pq
+				// we push negative distances because by default, c++ uses a max
+				// priority queue while we need a min priority queue
+			}
+		}
+	}
+	return distances;
+}
+
+int main() {
+	// makes input/output faster
+	ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+	
+	int V, E;
+	cin >> V >> E;
+	vector<pair<int, int> > *adj = new vector<pair<int, int> >[V+1];
+	for(int i = 0; i < E; i++) {
+		int a, b, c;
+		cin >> a >> b >> c;
+		adj[a].push_back({b,c});
+	}
+	vector<ll> distances = dijkstra(adj, 1, V);
+	for(int i = 1; i <= V; i++) cout << distances[i] << " ";	
+	return 0;
+}	
+```
+
+## [Shortest Routes II](https://cses.fi/problemset/task/1672)
+Similar to the previous question, we are given *n* nodes labeled from 1 to *n* and *m* edges connected these nodes. Our task is to process *q* queries of the form
+*a b* where you have to determine the shortest path between nodes *a* and *b*.
+
+Dijkstra's Algorithm is commonly known as a *Single Source Shortest Path Algorithm.* This time, we will need something a little more stronger. Fortuneatlly for us, there exists an *All Pairs Shortest Path Algorithm*, more commonly known as the [Floyd-Warshall Algorithm](https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm). We present the algorithm here.
+
+### Floyd-Warshall
+The Floyd-Warshall Algorithm is both spectacular and incredibly easy to implement, however, its time complexity is `O(n^3)`, which makes it rather inefficient for large graphs. It also forces us to use an adjacency matrix. You may wish to keep these notes in consideration when looking to implement this algorithm!
+
+## Code 
+```C++
+int main() {
+	// makes input/output faster
+	ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+
+	// create graph
+	const int v = 501;
+	ll graph[v][v];
+
+	// read in input
+	ll V, E, q, a, b, c;
+	cin >> V >> E >> q;
+	for(int i = 1; i <= V; i++) {
+		for(int j = 1; j <= V; j++) {
+			graph[i][j] = INF;
+		}
+		graph[i][i] = 0;
+	}
+
+	for(int i = 0; i < E; i++) {
+		cin >> a >> b >> c;
+		graph[a][b] = min(graph[a][b], c);
+		graph[b][a] = min(graph[b][a], c);
+	}
+
+	// floyd-warshall
+	for(int k = 1; k <= V; k++) {
+		for(int i = 1; i <= V; i++) {
+			for(int j = 1; j <= V; j++) {
+				graph[i][j] = min(graph[i][j], graph[i][k] + graph[k][j]);
+			}
+		}
+	}
+
+	for(int i = 0; i < q; i++) {	
+		cin >> a >> b;
+		cout << ((graph[a][b] == INF) ? -1: graph[a][b]) << endl;
+	}
+	return 0;
+}	
+```
+
 ## [Cycle Finding](https://cses.fi/problemset/task/1197)
 Given a directed graph, your task is to find out if it contains a negative cycle, and also give an example of such a cycle.
 
@@ -349,7 +465,7 @@ int main() {
 Our task is as follows: you have to complete *n* courses. There are *m* requirements of the form "course a has to be completed before course b". Your task is to find an order in which you can complete the courses.
 
 ### Topological Sort
-Our tasks reduces to finding a [topological ordering](https://en.wikipedia.org/wiki/Topological_sorting) of the courses. It can be proven that every Directed-Acyclic Graph (DAG) has a topological ordering of its vertices. Our algorithm must do two things: make sure that our graph does not contain a cycle, and find an ordering of the nodes. In the previous problem, we learned how to check for directed cycles. As it turns out, we can actually find a topological ordering of the nodes by adding all nodes to a list as soon as they get colored black. This produces a *reverse topological ordering*.
+Our task reduces to finding a [topological ordering](https://en.wikipedia.org/wiki/Topological_sorting) of the courses. It can be proven that every Directed-Acyclic Graph (DAG) has a topological ordering of its vertices. Our algorithm must do two things: make sure that our graph does not contain a cycle, and find an ordering of the nodes. In the previous problem, we learned how to check for directed cycles. As it turns out, we can actually find a topological ordering of the nodes by adding all nodes to a list as soon as they get colored black. This produces a *reverse topological ordering*.
 ## Code
 Note that our code for this problem is almost identical to the previous question!
 ```C++
