@@ -120,3 +120,89 @@ int main() {
 	return 0;
 }
 ```
+
+## [Coin Combinations I](https://cses.fi/problemset/task/1635/)
+### Problem Statement
+Consider a money system consisting of *n* coins. Each coin has a positive integer value. Your task is to calculate the number of distinct ways you can produce a money sum *x* using the available coins.
+
+### Explanation
+This questiton is exactly the same as Dice Combinations, only this time, we iterate over the available denominations.
+
+### Code
+```C++
+int main() {
+	// makes input/output faster
+	ios_base::sync_with_stdio(false); cin.tie(NULL);
+
+	ll x, n, m = 1e9+7;
+	cin >> x >> n;
+	vector<ll> coins(x), dp(n+1, 0);
+	for(int i = 0; i < x; i++) {
+		cin >> coins[i];
+	}
+
+	dp[0] = 1; // there is exactly one way to construct the empty set!
+	for(int i = 1; i <= n; i++) {
+		for(int j = 0; j < (int)coins.size(); j++) {
+			ll c = coins[j];
+			if(i >= c) {
+				dp[i] = (dp[i] + dp[i-c]) % m;
+			}
+		}	
+	}
+	
+	cout << dp[n] << endl;
+
+	return 0;
+}
+```
+## [Removing Digits](https://cses.fi/problemset/task/1637/)
+### Problem Statement
+You are given an integer *n*. On each step, you may substract from it any one-digit number that appears in it.
+
+### Explanation
+This problem is exactly the same as Minimizing Coins, however, now, our denominations are digits of our number!
+
+### Code
+```C++
+vector<ll> getDigits(ll n) {
+	vector<ll> digits;
+	while(n > 0) {
+		digits.push_back(n%10);
+		n /= 10;
+	}
+	return digits;
+}
+
+int main() {
+	// makes input/output faster
+	ios_base::sync_with_stdio(false); cin.tie(NULL);
+
+	ll n;
+	cin >> n;
+	vector<ll> dp(n+1, INF);
+
+	if(n == 0) {
+		cout << 0 << endl;
+	}
+	else if(n < 10) {
+		cout << 1 << endl;
+	}
+	else {
+		// base cases
+		dp[0] = 0; // 0 steps to get to 0
+		
+		for(int i = 1; i <= n; i++) {
+			vector<ll> digits = getDigits(i);
+			for(auto d: digits) {
+				if(d != 0) {
+					dp[i] = min(dp[i], dp[i-d]);
+				}
+			}
+			dp[i] += 1;
+		}
+		cout << dp[n] << endl;
+	}
+	return 0;
+}	
+```
