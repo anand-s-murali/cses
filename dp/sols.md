@@ -2,9 +2,12 @@
 Below are all the solutions, with explanation, to the DP questions that I have completeted from CSES.
 
 ## [Dice Combinations](https://cses.fi/problemset/task/1633)
-Our task for this question is to count the number of ways to construct sum *n* by throwing a dice one or more times. Each throw produces an outcome between 1 and 6.
+### Problem Statement
+Your task is to count the number of ways to construct sum n by throwing a dice one or more times. Each throw produces an outcome between 1 and 6.
 
-## Code
+### Explanation
+
+### Code
 ```C++
 int main() {
 	// makes input/output faster
@@ -24,12 +27,51 @@ int main() {
 	return 0;
 }	
 ```
+
+## [Minimizing Coins](https://cses.fi/problemset/task/1634)
+### Problem Statement
+Consider a money system consisting of n coins. Each coin has a positive integer value. Your task is to produce a sum of money x using the available coins in such a way that the number of coins is minimal.
+For example, if the coins are {1,5,7} and the desired sum is 11, an optimal solution is 5+5+1 which requires 3 coins.
+
+### Explanation
+
+### Code
+```C++
+int main() {
+	// makes input/output faster
+	ios_base::sync_with_stdio(false); cin.tie(NULL);
+
+	ll n, x;
+	cin >> x >> n;
+	vector<ll> coins(x), dp(n+1, INF-1);
+	
+	for(int i = 0; i < x; i++) {
+		cin >> coins[i];
+	}
+
+	dp[0] = 0; // base case: 0 ways to make sum 0
+	for(int i = 1; i <= n; i++) {
+		for(auto c: coins) {
+			if(i >= c) {
+				dp[i] = min(dp[i], dp[i-c]); // only update dp if we can make valid difference
+			}
+		}
+		dp[i] += 1; // we add one to symbolize actually adding a coin
+	}
+
+	cout << ((dp[n] == INF) ? -1: dp[n]) << endl;
+	return 0;
+}	
+```
+
 ## [Grid Paths](https://cses.fi/problemset/task/1638)
-Consider an n×n grid whose squares may have traps. It is not allowed to move to a square with a trap.
+### Problem Statement
+Consider an *n×n* grid whose squares may have traps. It is not allowed to move to a square with a trap.
+Your task is to calculate the number of paths from the upper-left square to the lower-right square where you only can move right or down.
 
-Our task is to calculate the number of paths from the upper-left square to the lower-right square where you only can move right or down.
+### Explanation
 
-## Code
+### Code
 ```C++
 int main() {
 	// makes input/output faster
