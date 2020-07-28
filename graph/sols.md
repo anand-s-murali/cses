@@ -657,3 +657,48 @@ int main() {
 	return 0;
 }
 ```
+
+## [Game Routes](https://cses.fi/problemset/task/1681/)
+In this question, we're given a directed acyclic graph with *n* nodes labeled from 1 to *n* and *m* edges provided as input. Our goal is to count the number of ways to reach node *n* starting from node 1. To solve this problem, we need to use [Dynammic Programming](https://en.wikipedia.org/wiki/Dynamic_programming). Let the value `dp[i] = number of ways to reach node n starting at node i`. Then the number of ways to get to node *n* from 1 is given by `dp[1]` and is calculated as such: `dp[1] = dp[1 -> <neighbor 1>] + dp[1 -> <neighbor 2>] +...+ dp[1-><neighbor k>]` where neighbors 1..k are adjacent to 1. The same logic can be applied for all other nodes. As a starting point in our calculation (and as a breaking point in our recursion), consider the last node *n*. Trivially, `dp[n] = 1` as there is only one path from the goal node to itself. Now we are ready to code!
+
+### Code
+```C++
+const int mxN = 1e5+1;
+int mod = 1e9+7;
+vector<int> graph[mxN];
+vector<ll> dp(mxN, -1);
+
+ll dfs(vector<int> graph[], vector<ll>& table, int u, int goal) {
+	// if we've already calculated the number of paths, just return it!
+	if(table[u] != -1) {
+		return table[u];
+	}
+	// count all the paths from node u to node n
+	ll numPaths = 0;	
+	for(auto& v: graph[u]) {
+		numPaths += dfs(graph, table, v, goal);
+		numPaths %= mod;
+	}
+	// store results in our table
+	table[u] = numPaths;
+	return numPaths;
+}
+
+int main() {
+	// makes input/output faster
+	ios_base::sync_with_stdio(false); cin.tie(NULL);
+	ll n, m, a, b;
+	cin >> n >> m;
+	for(int i = 0; i < m; i++) {
+		cin >> a >> b;
+		graph[a].push_back(b);
+	}
+
+	// perform DFS from node 1
+	dp[n] = 1;
+	dfs(graph, dp, 1, n);
+	cout << dp[1] % mod << endl;
+	
+	return 0;
+}
+```
