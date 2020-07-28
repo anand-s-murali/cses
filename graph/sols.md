@@ -2,8 +2,6 @@
 Below are all the solutions (some code omitted), with explanation, to the graph questions that I have completeted from CSES.
 
 ## [Counting Rooms](https://cses.fi/problemset/task/1192)
-
-### Explanation
 Given an *nxm* map of a building consisting of walls (#) and floor tiles (.), we need to count the number of rooms in the building. A room is nothing more than adjacent
 floor tiles surrounded by walls. You can think of the rooms as islands in an ocean. Counting the rooms is easy, simply iterate over the grid, stopping when we find a floor tile.
 From this position in the grid, we launch a Depth-First Seach. Why? Because we need to see if there are any floor tiles adjacent to us. These floor tiles, obviously, belong to the same
@@ -130,7 +128,7 @@ int main() {
 Following up on our example, this code would create the roads (1,3) and (3,5). Again, please note that this solution is not unique.
 
 ## [Message Routes](https://cses.fi/problemset/task/1667)
-Give *n* computers labeled 1 through *n*, we need to determine if there is a path from computer 1 to computer *n*. If such a path exists, we need to print out the 
+Given *n* computers labeled 1 through *n*, we need to determine if there is a path from computer 1 to computer *n*. If such a path exists, we need to print out the 
 shortest path.
 
 This is again nothing more than a simple Breadth-First Search. And, at the risk of contradicting myself, the code is provided below. In my solution, I keep track 
@@ -263,6 +261,146 @@ int main() {
 	}
 	return 0;
 }	
+```
+
+## [Monsters](https://cses.fi/problemset/task/1194/)
+Given an *n*x*m* grid consisting of walls (#), floor tiles (.) and monsters (M), our goal is to find a path out of the labyrinth such that we never share a square with a monster. This problem is not so simple, and I've made my solution verbose on purpose. The idea for this question is keep a track of all the monsters and perform a Breadth-First Search from all of them simultaneously, keeping track of the minimum number of steps necessary for any one monster to reach a given location in the grid. In my solution, these distances are maintained in `monsterSteps[mxD][mxD]`. After we've considered all possible locations the monsters can travel, we perform a Breadth-First Search starting from the source location (marked as 'A' in the grid). This BFS search should be familiar; we consider the current position, check if we are at the goal node, and, if we are not, we add all valid neighbors. This time, however, a neighbor is valid if and only if it is not a wall, and we can reach the neighbor before any monster can. Once we find a valid path, we can simply backtrack as we've done so many times before.
+
+### Code
+```C++
+const int mxD = 1000;
+char grid[mxD][mxD]; // holds the maze itself
+ll monsterSteps[mxD][mxD]; // will hold the monster's steps
+pair<pii, char> parent[mxD][mxD]; // will hold the parent of each square the user takes
+ll dist[mxD][mxD];
+int dx[4] = {-1, 0, 1, 0};
+int dy[4] = {0, 1, 0, -1};
+string dir = "URDL";
+
+bool isValid(int r, int c, int N, int M) {
+	return (r >= 0 && r < N && c >= 0 && c < M);
+}
+
+bool isGoal(int r, int c, int N, int M) {
+	return (r == 0 || c == 0 || r == N-1 || c == M-1);
+}
+
+int main() {
+	// makes input/output faster
+	ios_base::sync_with_stdio(false); cin.tie(NULL);
+
+	ll N, M;
+	pii source, goal;
+	queue<pii> frontier, monsterFrontier;
+	cin >> N >> M;
+
+	// read in the maze
+	for(int i = 0; i < N; i++) {
+		for(int j = 0; j < M; j++) {
+			cin >> grid[i][j];
+			dist[i][j] = INF;
+			monsterSteps[i][j] = INF;
+			if(grid[i][j] == 'A') {
+				dist[i][j] = 0;
+				source = {i,j};
+				frontier.push({i,j});
+			}
+			else if(grid[i][j] == 'M') {
+				monsterFrontier.push({i,j});
+			}
+		}
+	}
+
+	// perform BFS from each of the monsters
+	// keep track of the minimum time to get to a square
+	int currentMonsterStep = 0;
+	while(!monsterFrontier.empty()) {
+		int monsterSize = monsterFrontier.size();
+		for(int k = 0; k < monsterSize; k++) {
+			pii currentMonster = monsterFrontier.front();
+			monsterFrontier.pop();
+			int monsterRow = currentMonster.first;
+			int monsterCol = currentMonster.second;
+			
+			// check if we can reach square in better time
+			// if we can't do NOT add neighbors
+			if(monsterSteps[monsterRow][monsterCol] <= currentMonsterStep) {
+				continue;
+			}
+			monsterSteps[monsterRow][monsterCol] = currentMonsterStep;
+
+			// add valid neighbors
+			for(int i = 0; i < 4; i++) {
+				int newRow = monsterRow + dx[i];
+				int newCol = monsterCol + dy[i];
+
+				if(isValid(newRow, newCol, N, M) && grid[newRow][newCol] != '#') {
+					monsterFrontier.push({newRow, newCol});
+				}
+			}
+		}
+		// increment step
+		currentMonsterStep++;
+	}
+
+	// now perform BFS from person
+	// moving only to positions where currentPersonStep < monsterStep
+	int currentPersonStep = 0;
+	bool hasPath = false;
+	while(!frontier.empty()) {
+		int personSize = frontier.size();
+		for(int k = 0; k < personSize; k++) {
+			pii currentPerson = frontier.front();
+			frontier.pop();
+			int personRow = currentPerson.first;
+			int personCol = currentPerson.second;
+
+			// check if we are at a goal state
+			if(isGoal(personRow, personCol, N, M)) {
+				hasPath = true;
+				goal = currentPerson;
+				break;
+			}
+
+			// if not at goal, add all valid neighbors
+			for(int i = 0; i < 4; i++) {
+				int newRow = personRow + dx[i];
+				int newCol = personCol + dy[i];
+
+				// determine if position is valid
+				if(isValid(newRow, newCol, N, M) && grid[newRow][newCol] != '#' && dist[newRow][newCol] == INF) {
+					// don't go to positions where a monster WILL be
+					if(monsterSteps[newRow][newCol] > currentPersonStep+1) {
+						// update data structures
+						parent[newRow][newCol] = {currentPerson, dir[i]};
+						dist[newRow][newCol] = dist[personRow][personCol] + 1;
+						frontier.push({newRow, newCol});
+					}
+				}
+			}
+		}
+		// increment step
+		currentPersonStep++;
+	}
+
+	// now check if we have a valid path
+	if(!hasPath) cout << "NO" << endl;
+	else {
+		cout << "YES" << "\n" << dist[goal.first][goal.second] << endl;
+		// recover the path
+		vector<char> path;
+		while(goal != source) {
+			path.push_back(parent[goal.first][goal.second].second);
+			goal = parent[goal.first][goal.second].first;
+		}
+		// reverse the path
+		reverse(all(path));
+		for(auto& e: path) {
+			cout << e;
+		}
+	}
+	return 0;
+}
 ```
 
 ## [Shortest Routes I](https://cses.fi/problemset/task/1671)
